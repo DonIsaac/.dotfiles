@@ -1,0 +1,16 @@
+{
+	"link": {
+		"~/.bashrc": ".bashrc",
+		"~/.profile": ".profile",
+		"~/.bash_aliases": ".bash_aliases",
+		"~/.bash_logout": ".bash_logout",
+		"~/.tmux.conf": ".tmux.conf",
+		"~/.tmux.conf.local": ".tmux.conf.local",
+		"~/.vimrc": ".vimrc"
+	},
+
+	"shell": {
+		"before": [],
+		"after": []
+	}
+}

@@ -1,6 +1,7 @@
 # Mostly-static setup
-FROM ubuntu:latest
-RUN apt update && apt install git vim
+FROM node:latest
+RUN apt-get update && \
+	apt-get -y install git vim node
 
 # Build args
 ARG REPO=https://github.com/DonIsaac/.dotfiles.git
@@ -13,5 +14,13 @@ RUN git clone $REPO
 
 # Dotfile setup
 WORKDIR /home/$USER/.dotfiles
+RUN git submodule update --init --recursive
 ENTRYPOINT ["/bin/bash"]
-CMD ./install
+# CMD bash install
+
+
+# Backup code, just in case
+
+# RUN apt-get update && \
+	# apt-get -y install git vim python3 && \
+	# alias python=python3
