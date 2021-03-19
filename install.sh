@@ -3,7 +3,7 @@
 files=(conf.json parse.jq)
 
 # Make sure JQ is installed
-if [ ! $(which jq > /dev/null) ]; then
+if [ ! $(which jq) ]; then
 	echo "Error: jq is not installed. Please install it before continuing."
 	exit 1
 fi

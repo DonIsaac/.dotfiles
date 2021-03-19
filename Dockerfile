@@ -1,7 +1,8 @@
 # Mostly-static setup
 FROM ubuntu:latest
 RUN apt-get update && \
-	apt-get -y install git vim
+	apt-get install -y --no-install-recommends apt-utils && \
+	apt-get -y install git vim jq
 
 # Build args
 ARG REPO=https://github.com/DonIsaac/.dotfiles.git
@@ -15,8 +16,11 @@ RUN git clone $REPO
 # Dotfile setup
 WORKDIR /home/$USER/.dotfiles
 RUN git submodule update --init --recursive
-ENTRYPOINT ["/bin/bash"]
-# CMD bash install
+
+# Start commands
+CMD bash install.sh
+
+
 
 
 # Backup code, just in case
