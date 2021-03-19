@@ -23,6 +23,7 @@ echo "$links"
 echo "==========================================================="
 echo ""
 
+echo "dirname: $(dirname $1)"
 echo "pwd: $(pwd)"
 echo "ls of home dir:"
 ls -la ~
@@ -41,7 +42,7 @@ for link in $links; do
 	
 	ln_args=(${link/;/ })
 	echo "linking '${ln_args[0]}' to '${ln_args[1]}'..."
-	echo ln -fs ${ln_args[@]} | bash -s
+	echo ln -fs $(pwd)/${ln_args[0]} ${ln_args[1]}''| bash -s
 	# ln -s ${ln_args[@]}
 done
 

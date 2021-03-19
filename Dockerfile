@@ -15,10 +15,11 @@ RUN git clone $REPO
 WORKDIR /root/.dotfiles
 RUN pwd
 RUN git submodule update --init --recursive
-RUN ./install.sh
+# RUN ./install.sh
 
 # Start commands
-CMD ["/bin/bash"]
+CMD cd /root/.dotfiles && bash install.sh && bash
+# CMD ["/bin/bash"]
 
 
 
