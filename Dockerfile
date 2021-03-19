@@ -1,7 +1,7 @@
 # Mostly-static setup
-FROM node:latest
+FROM ubuntu:latest
 RUN apt-get update && \
-	apt-get -y install git vim node
+	apt-get -y install git vim
 
 # Build args
 ARG REPO=https://github.com/DonIsaac/.dotfiles.git
