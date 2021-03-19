@@ -20,12 +20,28 @@ done
 links=$(jq -rcf parse.jq conf.json)
 echo "links:"
 echo "$links"
+echo "==========================================================="
+echo ""
+
+echo "pwd: $(pwd)"
+echo "ls of home dir:"
+ls -la ~
+
+echo "==========================================================="
+echo ""
+
+echo "files in directory:"
+ls -la
+
+echo "==========================================================="
+echo ""
 
 # Create the links
 for link in $links; do
 	
 	ln_args=(${link/;/ })
 	echo "linking '${ln_args[0]}' to '${ln_args[1]}'..."
-	ln ${ln_args[@]}
+	echo ln -fs ${ln_args[@]} | bash -s
+	# ln -s ${ln_args[@]}
 done
 

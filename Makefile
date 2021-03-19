@@ -1,10 +1,17 @@
 .PHONY: clean run docker-stop
 
-IMAGE_NAME = donisaac/dotfiles
-CONTAINER_NAME = dotfiles
+IMAGE_NAME := donisaac/dotfiles
+CONTAINER_NAME := dotfiles
+
+RUN_ARGS := -it --name $(CONTAINER_NAME) -v $(shell pwd):/root/.dotfiles
+
+# ifdef $(LOCAL)
+	# RUN_ARGS += -v $(shell pwd):/home/frank/.dotfiles
+# endif
+
 
 run: build.target docker-stop
-	docker run -it --name $(CONTAINER_NAME) $(IMAGE_NAME)
+	docker run $(RUN_ARGS) $(IMAGE_NAME)
 
 build.target: Dockerfile
 	docker build -t $(IMAGE_NAME) .

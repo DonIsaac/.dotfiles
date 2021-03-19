@@ -6,19 +6,19 @@ RUN apt-get update && \
 
 # Build args
 ARG REPO=https://github.com/DonIsaac/.dotfiles.git
-ARG USER=frank
 
 # Setup a user with its respective files and folders
-RUN mkdir -p /home/$USER
-WORKDIR /home/$USER
+WORKDIR /root
 RUN git clone $REPO
 
 # Dotfile setup
-WORKDIR /home/$USER/.dotfiles
+WORKDIR /root/.dotfiles
+RUN pwd
 RUN git submodule update --init --recursive
+RUN ./install.sh
 
 # Start commands
-CMD bash install.sh
+CMD ["/bin/bash"]
 
 
 
