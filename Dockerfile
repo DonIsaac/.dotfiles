@@ -2,7 +2,7 @@
 FROM ubuntu:latest
 RUN apt-get update && \
 	apt-get install -y --no-install-recommends apt-utils && \
-	apt-get -y install git vim jq
+	apt-get update && apt-get install -y git vim jq
 
 # Build args
 ARG REPO=https://github.com/DonIsaac/.dotfiles.git
