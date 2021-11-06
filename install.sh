@@ -8,6 +8,12 @@ if [ ! $(which jq) ]; then
 	exit 1
 fi
 
+# coc.nvim won't work without node, emit a warning if not installed
+if [ ! $(which node) ]; then
+    echo "Warning: The coc.nvim plugin requires node, which is not installed."
+    echo "You can download it from here: https://nodejs.org/en/download/"
+fi
+
 # Check that needed files exist
 for file in $files; do
 	if [ ! -f $file ]; then
@@ -46,3 +52,20 @@ for link in $links; do
 	# ln -s ${ln_args[@]}
 done
 
+# Install vim-plug
+if [ -s "$HOME/.vim/autoload/plug.vim" ]; then
+    echo "vim-plug is already installed, skipping installation step."
+else
+    if [ ! $(which vim) ]; then
+        echo "vim is not installed, skipping vim-plug installation."
+
+    elif [ $(which curl) ]; then
+        echo "installing vim-plug..."
+        curl -fsSLo ~/.vim/autoload/plug.vim --create-dirs \
+            https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+        yes | vim +PlugInstall +qall        
+    else
+        echo "curl is not installed, cannot install vim-plug. You will need to install it manually."
+        echo "You can find installation instructions here: https://github.com/junegunn/vim-plug"
+    fi
+fi
