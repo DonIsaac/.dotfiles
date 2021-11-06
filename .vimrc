@@ -8,7 +8,8 @@ noremap <Leader>Y "+y
 noremap <Leader>P "+p
 " use same clipboard as system, allowing for copy/paste across
 " windows/linux(wsl)/vim
-" set clipboard^=unnamed
+set clipboard^=unnamed
+" if $DISPLAY =~
 
 filetype indent plugin on
 syntax on
@@ -134,6 +135,39 @@ let g:closetag_shortcut = '>'
 " "
 " let g:closetag_close_shortcut = '<leader>>'
 
+" ------------------------------ MISC SETTINGS -------------------------------
+
+" Gets the syntax item stack of the symbol under the cursor
+" https://stackoverflow.com/questions/9464844/how-to-get-group-name-of-highlighting-under-cursor-in-vim#9464929
+function! SynStack()
+  if !exists("*synstack")
+    return
+  endif
+  return map(synstack(line('.'), col('.')), 'synIDattr(v:val, "name")')
+endfunc
+
+
+" Gets the syntax group of the token under the cursor.
+" Takes 1 optional argument. If truthy, all syntax groups the token belongs to
+" are listed. If falsy, only the first group is returned. Defaults to falsy.
+function SynGroup(...)
+  let listAll = get(a:, 1, 0)
+  if listAll
+    return map(synstack(line('.'), col('.')), 'synIDattr(synIDtrans(v:val), "name")')
+  else
+    return synIDattr(synIDtrans(synID(line('.'), col('.'), 1)), 'name')
+  end
+endfunc
+
+command! -nargs=0 SynStack :echo SynStack()
+"
+" nmap <leader>ss :SynStack<CR>
+nmap <leader>ss :echo SynStack()<CR>
+nmap <leader>sg :echo SynGroup()<CR>
+nmap <leader>sG :echo SynGroup(1)<CR>
+
+nmap <C-.> :echo "hello!"<CR>
+
 " ----------------------------- PLUGGED SETTINGS -----------------------------
 
 " Auto-install vim-plugged if it's not installed yet
@@ -145,13 +179,14 @@ endif
 
 " 1 for debug messages, 2 for verbose debug messages
 let g:detectindent_verbosity = 0
+let g:NERDTreeStatusLine = '%#NonText#'
 
 call plug#begin('~/.vim/plugged')
 
 Plug 'scrooloose/nerdcommenter'
 " vim IDE plugin, based on VSCode
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-Plug 'sheerun/vim-polyglot'
+" Plug 'sheerun/vim-polyglot'
 " Minimalist Color Theme
 Plug 'dikiaap/minimalist'
 " Sidebar file explorer
@@ -161,10 +196,13 @@ Plug 'vim-ruby/vim-ruby'
 Plug 'hashivim/vim-terraform'
 Plug 'wlangstroth/vim-racket'
 Plug 'chr4/nginx.vim'
+Plug 'neoclide/jsonc.vim'
+Plug 'vim-scripts/DoxygenToolkit.vim'
 " TypeScript plugin
 " Plug 'Quramy/tsuquyomi'
 Plug 'leafgarland/typescript-vim'
 Plug 'DonIsaac/detectindent'
+Plug 'harenome/vim-mipssyntax'
 " Detects indent style of currently opened file and adjusts accordingly
 " Plug 'ciaranm/detectindent'
 call plug#end()
@@ -194,7 +232,6 @@ autocmd vimenter * NERDTree
 " Close vim when NERDTree is the last window
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() |
     \ quit | endif
-
 
 
 " --------------------------- NERDCOMMENTER SETTINGS ---------------------------
@@ -241,6 +278,7 @@ nmap <silent> ]g <Plug>(coc-diagnostic-next)
 
 " Remap keys for gotos
 nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gD <Plug>(coc-type-definition)
 nmap <silent> gy <Plug>(coc-type-definition)
 nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
@@ -254,6 +292,7 @@ function! s:show_documentation()
   endif
 endfunction
 
+" K shows documentation in preview window
 nnoremap <silent> K :call <SID>show_documentation()<CR>
 
 if maparg("<C-\>", "n") == ""
@@ -270,8 +309,14 @@ endfunction
 xmap <leader>f  <Plug>(coc-format-selected)
 nmap <leader>f  <Plug>(coc-format-selected)
 
+" Use \rn or F2 to rename current word
+nmap <leader>rn <Plug>(coc-rename)
+nmap <F2> <Plug>(coc-rename)
+
 " Add `:Format` command to format the current buffer
 command! -nargs=0 Format :call CocAction('format')
+" todo: does not work
+" nnoremap <silent> \ef :call <SID>CocAction('format')<CR>
 
 inoremap <silent><expr> <TAB>
       \ pumvisible() ? "\<C-n>" :
@@ -301,7 +346,7 @@ function! IndentLine()
     let l:indent_width = s:GetNum("shiftwidth")
     " let l:count = split(execute("setl " . l:cmd), "=")[-1]
 
-    let l:res = l:stop_count . ":" . l:indent_width . " " . l:type 
+    let l:res = l:stop_count . ":" . l:indent_width . " " . l:type
     " echom l:res
 
     return l:res
@@ -352,39 +397,39 @@ nnoremap <C-J> a<CR><Esc>k$
 " inoremap <F3> <C-O>:w<CR>
 
 " ## added by OPAM user-setup for vim / base ## 93ee63e278bdfc07d1139a748ed3fff2 ## you can edit, but keep this line
-let s:opam_share_dir = system("opam config var share")
-let s:opam_share_dir = substitute(s:opam_share_dir, '[\r\n]*$', '', '')
+" let s:opam_share_dir = system("opam config var share")
+" let s:opam_share_dir = substitute(s:opam_share_dir, '[\r\n]*$', '', '')
 
-let s:opam_configuration = {}
+" let s:opam_configuration = {}
 
-function! OpamConfOcpIndent()
-  execute "set rtp^=" . s:opam_share_dir . "/ocp-indent/vim"
-endfunction
-let s:opam_configuration['ocp-indent'] = function('OpamConfOcpIndent')
+" function! OpamConfOcpIndent()
+"   execute "set rtp^=" . s:opam_share_dir . "/ocp-indent/vim"
+" endfunction
+" let s:opam_configuration['ocp-indent'] = function('OpamConfOcpIndent')
 
-function! OpamConfOcpIndex()
-  execute "set rtp+=" . s:opam_share_dir . "/ocp-index/vim"
-endfunction
-let s:opam_configuration['ocp-index'] = function('OpamConfOcpIndex')
+" function! OpamConfOcpIndex()
+"   execute "set rtp+=" . s:opam_share_dir . "/ocp-index/vim"
+" endfunction
+" let s:opam_configuration['ocp-index'] = function('OpamConfOcpIndex')
 
-function! OpamConfMerlin()
-  let l:dir = s:opam_share_dir . "/merlin/vim"
-  execute "set rtp+=" . l:dir
-endfunction
-let s:opam_configuration['merlin'] = function('OpamConfMerlin')
+" function! OpamConfMerlin()
+"   let l:dir = s:opam_share_dir . "/merlin/vim"
+"   execute "set rtp+=" . l:dir
+" endfunction
+" let s:opam_configuration['merlin'] = function('OpamConfMerlin')
 
-let s:opam_packages = ["ocp-indent", "ocp-index", "merlin"]
-let s:opam_check_cmdline = ["opam list --installed --short --safe --color=never"] + s:opam_packages
-let s:opam_available_tools = split(system(join(s:opam_check_cmdline)))
-for tool in s:opam_packages
-  " Respect package order (merlin should be after ocp-index)
-  if count(s:opam_available_tools, tool) > 0
-    call s:opam_configuration[tool]()
-  endif
-endfor
-" ## end of OPAM user-setup addition for vim / base ## keep this line
-" ## added by OPAM user-setup for vim / ocp-indent ## 621d1b14e458dedc3b4e09620bac9516 ## you can edit, but keep this line
-if count(s:opam_available_tools,"ocp-indent") == 0
-  source "/home/donisaac/.opam/4.07.0/share/ocp-indent/vim/indent/ocaml.vim"
-endif
-" ## end of OPAM user-setup addition for vim / ocp-indent ## keep this line
+" let s:opam_packages = ["ocp-indent", "ocp-index", "merlin"]
+" let s:opam_check_cmdline = ["opam list --installed --short --safe --color=never"] + s:opam_packages
+" let s:opam_available_tools = split(system(join(s:opam_check_cmdline)))
+" for tool in s:opam_packages
+"   " Respect package order (merlin should be after ocp-index)
+"   if count(s:opam_available_tools, tool) > 0
+"     call s:opam_configuration[tool]()
+"   endif
+" endfor
+" " ## end of OPAM user-setup addition for vim / base ## keep this line
+" " ## added by OPAM user-setup for vim / ocp-indent ## 621d1b14e458dedc3b4e09620bac9516 ## you can edit, but keep this line
+" " if count(s:opam_available_tools,"ocp-indent") == 0
+"   " source '/home/donisaac/.opam/4.07.0/share/ocp-indent/vim/indent/ocaml.vim'
+" " endif
+" " ## end of OPAM user-setup addition for vim / ocp-indent ## keep this line

@@ -92,16 +92,16 @@ function parse_git_dirty() {
 function parse_git_branch() {
   git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e "s/* \(.*\)/\1$(parse_git_dirty)/"
 }
-# \$([[ -n \$(git branch 2> /dev/null) ]] && echo \" on \")\[$magenta\]\$(parse_git_branch)\[$white\]\$ \[$reset\]
+
 if [ "$color_prompt" = yes ]; then
-    # PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;36m\]\w\[\033[00m\]\$ '
     # display datetime
     PS1="\[${bold}\]\[$orange\][\[$magenta\]\d \t\[$orange\]] "
-    # user@path
-    PS1+="\[$magenta\]\u\[$white\]@\[$green\]\w\[$white\]"
+    # user@host:path
+    PS1+="\[$magenta\]\u\[$white\]@"
+    PS1+="\[$magenta\]\h\[$white\]:"
+    PS1+="\[$green\]\w\[$white\]"
     # git branch (if available)
     PS1+="\$([[ -n \$(git branch 2> /dev/null) ]] && printf \" \xee\x9c\xa5 \")\[$magenta\]\$(parse_git_branch)\[$white\]\$ \[$reset\]"
-    # PS1='${debian_chroot:+($debian_chroot)}\[\033[01;32m\]\u@\h\[\033[00m\]:\[\033[01;36m\]\w\[\033[00m\]\$([[ -n \$(git branch 2> /dev/null) ]] && echo \" on \")\[$magenta\]\$(parse_git_branch)\[$white\]\$ \[$reset\]'
 else
     PS1='${debian_chroot:+($debian_chroot)}\u@\h:\w\$ '
 fi
@@ -137,32 +137,40 @@ fi
 
 # Make directories an easier color to see
 export LS_COLORS=$LS_COLORS:'di=0;33:'
+[[ $(which vim) ]] && export EDITOR=vim
 
-export NVM_DIR="$HOME/.nvm"
-[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+# Env variables for "home" directory of different programs
+[ -s "$HOME/.nvm" ] &&               export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] &&          \. "$NVM_DIR/nvm.sh"  # This loads nvm
 [ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
 export JAVA_HOME='/usr/java/jdk-11.0.6+10'
 export JUNIT_HOME="$HOME/lib/junit4.10"
 export CLASSPATH=".:$JUNIT_HOME/junit-4.10.jar"
-export DISPLAY=$(awk '/nameserver / {print $2; exit}' /etc/resolv.conf 2>/dev/null):0 # was :3
+# export DISPLAY=$(awk '/nameserver / {print $2; exit}' /etc/resolv.conf 2>/dev/null):0 # was :3
 export LIBGL_ALWAYS_INDIRECT=1
 
-export PATH="$PATH:$(yarn global bin)"
-export PATH="$PATH:$JAVA_HOME/bin"
-export PATH="$PATH:~/.deno/bin"
-export PATH="$PATH:/usr/local/go/bin"
-export PATH="$PATH:$(go env GOPATH)/bin"
+# Extend $PATH
+[[ $(which yarn) ]] &&          export PATH="$PATH:$(yarn global bin)"
+[[ "$JAVA_HOME" != "" ]] && [[ -s "$JAVA_HOME/bin" ]] && export PATH="$PATH:$JAVA_HOME/bin"
+[[ $(which pdflatex) ]] &&      export PATH="$PATH:/usr/local/texlive/2019/bin/x86_64-linux"
+[[ -s "$HOME/.deno/bin" ]] &&   export PATH="$PATH:~/.deno/bin"
+[[ -s "/usr/local/go/bin" ]] && export PATH="$PATH:/usr/local/go/bin"
+# Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
+[[ $(which rvm) ]] &&           export PATH="$PATH:$HOME/.rvm/bin"
 
-export GOPATH="$(go env GOPATH)"
+# Go home path. Needs to come after path setup.
 
+# Start, and register private keys with, ssh-agent
 eval `ssh-agent -s` > /dev/null 2> /dev/null
 ssh-add ~/.ssh/*.pem > /dev/null 2> /dev/null
 ssh-add ~/.ssh/*.key > /dev/null 2> /dev/null
 
 # opam configuration
 test -r /home/donisaac/.opam/opam-init/init.sh && . /home/donisaac/.opam/opam-init/init.sh > /dev/null 2> /dev/null || true
+[[ $(which opam) ]] && eval $(opam env)
+
 # Add autocompletion support for the Stripe CLI
-source ~/.stripe/stripe-completion.bash
+[[ -s "$HOME/.stripe/stripe-completion.bash" ]] && source ~/.stripe/stripe-completion.bash
 # terraform -install-autocomplete
 
 complete -C /usr/bin/terraform terraform
@@ -171,3 +179,4 @@ complete -C /usr/bin/terraform terraform
 # tabtab source for packages
 # uninstall by removing these lines
 [ -f ~/.config/tabtab/__tabtab.bash ] && . ~/.config/tabtab/__tabtab.bash || true
+[ -f "/home/donisaac/.ghcup/env" ] && source "/home/donisaac/.ghcup/env" # ghcup-env
