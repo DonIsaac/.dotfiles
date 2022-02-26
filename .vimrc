@@ -61,6 +61,8 @@ set nostartofline
 " Display the cursor position on the last line of the screen or in the status
 " line of a window
 set ruler
+" Linewrap markdown files at 80 characters
+au BufRead,BufNewFile *.md setlocal textwidth=80
 
 " Always display the status line, even if only one window is displayed
 set laststatus=2
@@ -93,6 +95,9 @@ set notimeout ttimeout ttimeoutlen=200
 
 " make CTRL-L clear highlighted search terms as well as redraw the screen
 nnoremap <silent> <C-L> :nohlsearch<CR><C-L>
+
+" Keybind Q to rewrap a block of selected text 
+vnoremap Q gq
 
 " Use <F11> to toggle between 'paste' and 'nopaste'
 set pastetoggle=<F11>
@@ -203,6 +208,12 @@ Plug 'vim-scripts/DoxygenToolkit.vim'
 Plug 'leafgarland/typescript-vim'
 Plug 'DonIsaac/detectindent'
 Plug 'harenome/vim-mipssyntax'
+Plug 'abecodes/tabout.nvim'
+Plug 'jackguo380/vim-lsp-cxx-highlight'
+
+if has('nvim')
+    Plug 'github/copilot.vim'
+endif
 " Detects indent style of currently opened file and adjusts accordingly
 " Plug 'ciaranm/detectindent'
 call plug#end()

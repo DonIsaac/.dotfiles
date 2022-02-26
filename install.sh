@@ -52,6 +52,11 @@ for link in $links; do
 	# ln -s ${ln_args[@]}
 done
 
+if [[ $(which curl) ]] ; then
+    has_curl= true
+else
+    has_curl= false
+fi
 # Install vim-plug
 if [ -s "$HOME/.vim/autoload/plug.vim" ]; then
     echo "vim-plug is already installed, skipping installation step."
@@ -59,7 +64,7 @@ else
     if [ ! $(which vim) ]; then
         echo "vim is not installed, skipping vim-plug installation."
 
-    elif [ $(which curl) ]; then
+    elif $has_curl then
         echo "installing vim-plug..."
         curl -fsSLo ~/.vim/autoload/plug.vim --create-dirs \
             https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim

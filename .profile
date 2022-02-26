@@ -25,6 +25,17 @@ fi
 if [ -d "$HOME/.local/bin" ] ; then
     PATH="$HOME/.local/bin:$PATH"
 fi
-echo "Running opam config env..."
-eval `opam config env`
-export PATH=$PATH:./bin
+
+# Set up OPAM if it's installed
+if [[ $(which opam) ]] ; then
+    echo "Running opam config env..."
+    eval `opam config env`
+fi
+
+export PATH=$PATH:./.bin
+
+[[ -s "$HOME/.rvm/scripts/rvm" ]] && source "$HOME/.rvm/scripts/rvm" # Load RVM into a shell session *as a function*
+
+if [ -z ${TMUX+x} ] ; then
+    export TERM=screen-256color
+fi

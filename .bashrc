@@ -137,7 +137,19 @@ fi
 
 # Make directories an easier color to see
 export LS_COLORS=$LS_COLORS:'di=0;33:'
-[[ $(which vim) ]] && export EDITOR=vim
+
+# Add VSCode's 'code' command to the path
+[ -s "/mnt/c/Program Files/Microsoft VS Code/bin" ] && export PATH="$PATH:/mnt/c/Program Files/Microsoft VS Code/bin" 
+
+# Try to use NeoVIM, VIM, or VSCode (in that order) as default editor
+if [[ $(which nvim) ]] ; then
+    export EDITOR=nvim
+elif [[ $(which vim) ]] ; then
+    export EDITOR=vim
+elif [[ $(which code) ]] ; then
+    export EDITOR=code
+fi
+# [[ $(which vim) ]] && export EDITOR=vim
 
 # Env variables for "home" directory of different programs
 [ -s "$HOME/.nvm" ] &&               export NVM_DIR="$HOME/.nvm"
@@ -155,8 +167,13 @@ export LIBGL_ALWAYS_INDIRECT=1
 [[ $(which pdflatex) ]] &&      export PATH="$PATH:/usr/local/texlive/2019/bin/x86_64-linux"
 [[ -s "$HOME/.deno/bin" ]] &&   export PATH="$PATH:~/.deno/bin"
 [[ -s "/usr/local/go/bin" ]] && export PATH="$PATH:/usr/local/go/bin"
+[[ -s "$HOME/.bin" ]] &&        export PATH="$PATH:$HOME/.bin"
+[[ -s "$HOME/bin" ]] &&         export PATH="$PATH:$HOME/bin"
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 [[ $(which rvm) ]] &&           export PATH="$PATH:$HOME/.rvm/bin"
+
+# Install z command: https://github.com/rupa/z 
+[ -s "$HOME/.bin/z/z.sh" ] && \. "$HOME/.bin/z/z.sh"
 
 # Go home path. Needs to come after path setup.
 

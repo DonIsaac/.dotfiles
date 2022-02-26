@@ -5,6 +5,8 @@
 #         Copyright 2012— Gregory Pakosz (@gpakosz).
 
 setw -g mouse on 
+set -g default-terminal "screen-256color"
+
 # -- keybinding overrides -----------------------------------------------------
 
 # Open a new window with t/CTRL-t

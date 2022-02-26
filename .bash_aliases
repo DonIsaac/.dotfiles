@@ -72,3 +72,17 @@ json() {
     filter=${2:-.} # use '.' if no JQ filter was provided
     curl -sL $1 | jq -C $filter | less -R
 }
+
+# Show git diff using bat
+batdiff() {
+    git diff --name-only --diff-filter=d | xargs bat --diff
+}
+
+# Push a new branch to the remote repository
+publish() {
+    git push --set-upstream origin $(git branch --show-current)
+}
+
+if [[ -s "$HOME/.bash_aliases.local" ]] ; then
+    source "$HOME/.bash_aliases.local"
+fi
