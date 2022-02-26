@@ -7,10 +7,10 @@ This repository contains the dotfiles I personally use. It includes files for ba
 To automatically install all dotfiles into your home directory, use the provided
 `install.sh` script. 
 
-```sh
+```bash
 # Clone the repo in your home directory
 cd ~
-git clone https://github.com/DonIsaac/.dotfiles.git
+git clone --recurse-submodules https://github.com/DonIsaac/.dotfiles.git
 
 # Run the installation script
 cd .dotfiles
@@ -21,14 +21,40 @@ This will create symlinks in your home directory for each dotfile. **Warning:
 your existing dotfiles _will be clobbered_!** You may want to make backups of
 them, e.g. `mv ~/.bashrc ~/.bashrc.backup`.
 
-Before you run it, you must have [jq](https://stedolan.github.io/jq/)
-installed. You will also probably want to have `curl` installed, but it isn't requried.
+### Required Tooling
+
+The install script relies on several tools to work properly. Some are required,
+and others are optional. Missing required tools causes installation to fail,
+while missing optional tools may cause certain automatic setup steps to be
+skipped. The list of tools are: 
+
+- jq _(required)_
+- node _(optional)_
+- curl _(optional)_
+- vim/nvim _(not a dependency, but vim setup will not complete without one
+  installed)_
+- tmux _(not a dependency, but is installed with `-i`)_
+
+This list is also available with the `--list-deps` flag.
+
+The install script is capable of installing missing tools for you. To do this,
+use the `-i` flag. Note that if `node` is missing, this will install
+[nvm](https://github.com/nvm-sh/nvm#intro) first, then install the latest LTS
+version of `node`.
+
+```bash
+# Show the binaries used by the install script
+./install.sh --list-deps
+
+# Run installation and setup, installing missing binaries beforehand.
+./install.sh -i
+```
 
 ## Manual Installation
 
 If you cannot run `install.sh` for some reason, or you want more control over
 how each file is set up, you can install each file manually. To do so, create a symlink
-for each file.
+for each file. For example:
 
 ```sh
 ln -s ~/.bashrc ~/.dotfiles/.bashrc
