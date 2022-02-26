@@ -2,7 +2,7 @@
 
 files=(conf.json parse.jq)
 # List of dependency tools
-deps=(jq node curl)
+deps=(jq node curl tmux nvim)
 # Whether or not dependencies should be installed. Controlled with -i,--install-deps flag.
 install_deps= false
 

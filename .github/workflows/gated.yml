@@ -3,10 +3,12 @@ on:
   pull_request:
     branches:
       - main
+    paths-ignore:
+      - '*.md'
 
 jobs:
   gated:
-    runs-on: ubuntu_latest
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - run: make check

@@ -60,6 +60,13 @@ for each file. For example:
 ln -s ~/.bashrc ~/.dotfiles/.bashrc
 ```
 
+Then, install [vim-plug](https://github.com/junegunn/vim-plug).
+```bash
+curl -fLo ~/.vim/autoload/plug.vim --create-dirs \
+    https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
+```
+To finish installing vim plugins, open vim and run `:PlugInstall`.
+
 ## Configuration
 
 The `conf.json` file controls what files are linked and where. It looks like this:
