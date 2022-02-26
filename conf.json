@@ -7,7 +7,7 @@
 		"~/.tmux.conf": ".tmux.conf",
 		"~/.tmux.conf.local": ".tmux.conf.local",
 		"~/.vimrc": ".vimrc",
-        "~/.config/nvim/init.vim": "nvim.init.vim",
+        "~/.config/nvim/init.vim": "nvim.init.vim"
 	},
 
 	"shell": {

@@ -92,7 +92,7 @@ fi
 
 # Install curl if it's not installed and $install_deps is true, otherwise 
 # print a warning message
-if [[ ! -x "$(command -v curl)" ]] then
+if [[ ! -x "$(command -v curl)" ]] ; then
 	if $install_deps; then
 		install_dep curl
 	else
@@ -195,7 +195,7 @@ else
 	if [[ ! $(command -v vim) ]] && [[ !$(command -v nvim) ]]; then
         echo "vim is not installed, skipping vim-plug installation."
 
-    elif $has_curl then
+    elif $has_curl ; then
         echo "installing vim-plug..."
         curl -fsSLo ~/.vim/autoload/plug.vim --create-dirs \
             https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim
