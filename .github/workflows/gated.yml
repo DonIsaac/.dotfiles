@@ -1,0 +1,12 @@
+name: Gated
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  gated:
+    runs-on: ubuntu_latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: make check
