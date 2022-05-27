@@ -6,6 +6,7 @@ noremap <Leader>y "*y
 noremap <Leader>p "*p
 noremap <Leader>Y "+y
 noremap <Leader>P "+p
+nnoremap <Leader>v <c-v>
 " use same clipboard as system, allowing for copy/paste across
 " windows/linux(wsl)/vim
 set clipboard^=unnamed
@@ -28,8 +29,12 @@ if has ("autocmd")
 	autocmd FileType make set noexpandtab softtabstop=0 tabstop=4
 endif
 
+set path+=src/**
+
 " Better command-line completion
 set wildmenu
+" Ignore certain files when completing
+set wildignore+=*.o,*.swp,*.DS_Store
 
 " Show partial commands in the last line of the screen
 set showcmd
@@ -39,7 +44,7 @@ set showcmd
 set hlsearch
 " Automatically change working directory when editing a file, but not really.
 " Also, Don't do it for files in /tmp
-autocmd BufEnter * if expand("%:p:h") !~ '^/tmp' | silent! lcd %:p:h | endif
+" autocmd BufEnter * if expand("%:p:h") !~ '^/tmp' | silent! lcd %:p:h | endif
 " Use case insensitive search, except when using capital letters
 set ignorecase
 set smartcase
@@ -185,15 +190,19 @@ endif
 " 1 for debug messages, 2 for verbose debug messages
 let g:detectindent_verbosity = 0
 let g:NERDTreeStatusLine = '%#NonText#'
+let g:NERDTreeHighlightCursorline = 1
+let g:NERDTreeShowHidden=1
+" These files won't appear in the file explorer
+let g:NERDTreeIgnore=['node_modules', 'dist', '\.git', '\.yarn', '\.DS_Store', '\.tsbuildinfo$', '\~$']
 
+" This part initializes plugins installed using vim-plugged
+" To install plugins, add them to this list and run :PlugInstall 
 call plug#begin('~/.vim/plugged')
 
 Plug 'scrooloose/nerdcommenter'
 " vim IDE plugin, based on VSCode
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
 " Plug 'sheerun/vim-polyglot'
-" Minimalist Color Theme
-Plug 'dikiaap/minimalist'
 " Sidebar file explorer
 Plug 'preservim/nerdtree'
 Plug 'Xuyuanp/nerdtree-git-plugin'
@@ -210,13 +219,37 @@ Plug 'DonIsaac/detectindent'
 Plug 'harenome/vim-mipssyntax'
 Plug 'abecodes/tabout.nvim'
 Plug 'jackguo380/vim-lsp-cxx-highlight'
+" Git plugin (https://github.com/tpope/vim-fugitive)
+Plug 'tpope/vim-fugitive'
 
+" Rainbow brackets plugin
+" Plug 'junegunn/rainbow_parentheses.vim'
+Plug 'frazrepo/vim-rainbow'
+" Color schemes
+Plug 'dikiaap/minimalist' " colorscheme minimalist
+Plug 'drewtempelmeyer/palenight.vim' " colorscheme palenight
+
+" Only install these plugins if we're running neovim, not vim
 if has('nvim')
     Plug 'github/copilot.vim'
+    Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+    " Plug 'rockerBOO/boo-colorscheme-nvim' " colorscheme boo
 endif
+
 " Detects indent style of currently opened file and adjusts accordingly
 " Plug 'ciaranm/detectindent'
 call plug#end()
+
+" ------------------------ RAINBOW PARENTHESES SETTINGS -----------------------
+
+" Enable rainbow parentheses
+" call rainbow_parenthsis#activate()
+" augroup rainbow_parenthsis
+    " au!
+    " au FileType * RainbowParenthesis
+" augroup END
+let g:rainbow_active = 1
+
 
 
 " --------------------------- DETECT-INDENT SETTINGS --------------------------
@@ -236,6 +269,8 @@ call plug#end()
 
 " Open NERDTree whenever vim is started
 autocmd vimenter * NERDTree
+let NERDTreeRespectWildIgnore=1
+
 " Open NERDTree when 'vim' command is run. You no longer have to type 'vim .'
 " autocmd StdinReadPre * let s:std_in=1
 " autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
@@ -243,6 +278,7 @@ autocmd vimenter * NERDTree
 " Close vim when NERDTree is the last window
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() |
     \ quit | endif
+
 
 
 " --------------------------- NERDCOMMENTER SETTINGS ---------------------------
@@ -253,14 +289,26 @@ autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTr
 let g:NERDSpaceDelims = 1
 
 
-" ---------------------------- MINIMALIST SETTINGS -----------------------------
+
+" ---------------------------- COLORSCHEME SETTINGS ----------------------------
 
 set t_Co=256
-colorscheme minimalist
+if has("termguicolors")
+    set termguicolors
+endif
+
+if has('nvim')
+    colorscheme palenight
+    let g:palenight_terminal_italics = 1
+else
+    colorscheme minimalist
+endif
 
 
 
 " ----------------------------- COC.NVIM SETTINGS ------------------------------
+
+let g:coc_filetype_map = { 'tex': 'latex' }
 
 " Some servers have issues with backup files, see #649
 set nobackup
@@ -298,14 +346,17 @@ nmap <silent> gr <Plug>(coc-references)
 function! s:show_documentation()
   if (index(['vim','help'], &filetype) >= 0)
     execute 'h '.expand('<cword>')
+  elseif (coc#rpc#ready())
+    call CocActionAsync('doHover')
   else
-    call CocAction('doHover')
+    execute '!' . &keywordprg . " " . expand('<cword>')
   endif
 endfunction
 
 " K shows documentation in preview window
 nnoremap <silent> K :call <SID>show_documentation()<CR>
 
+" Use ctrl+\ to insert λ
 if maparg("<C-\>", "n") == ""
   inoremap <buffer> <C-\> <C-K>l*
 endif
@@ -324,6 +375,24 @@ nmap <leader>f  <Plug>(coc-format-selected)
 nmap <leader>rn <Plug>(coc-rename)
 nmap <F2> <Plug>(coc-rename)
 
+" use \. to show fix suggestions
+nmap <leader>. :CocFix<CR>
+imap <leader>. <C-O>:CocFix<CR>
+
+" Run the Code Lens action on the current line.
+nmap <leader>cl <Plug>(coc-codelens-action)
+
+" Remap <C-f> and <C-b> for scroll float windows/popups.
+if has('nvim-0.4.0') || has('patch-8.2.0750')
+  nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+  nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+  inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
+  inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
+  vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+  vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+endif
+
+
 " Add `:Format` command to format the current buffer
 command! -nargs=0 Format :call CocAction('format')
 " todo: does not work
@@ -334,6 +403,48 @@ inoremap <silent><expr> <TAB>
       \ <SID>check_back_space() ? "\<TAB>" :
       \ coc#refresh()
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+
+
+
+" ------------------------------ COPILOT SETTINGS ------------------------------
+
+" Enable Copilot for json and yaml files
+let g:copilot_filetypes = {
+            \ 'yaml':  v:true,
+            \ 'json':  v:true,
+            \ 'sh':    v:true,
+            \ }
+
+
+
+" ---------------------------- TREESITTER SETTINGS -----------------------------
+
+function! ConfigureTreeSitter()
+lua << EOF
+require'nvim-treesitter.configs'.setup {
+    ensure_installed = { "c", "cpp", "python", "javascript", "typescript", "html", "css" },
+    sync_install = false,
+    highlight = {
+        enable = true,
+        -- List of languages to disable
+        disable = {},
+        -- Setting this to true will run `:h syntax` and tree-sitter at the same time.
+        -- Set this to `true` if you depend on 'syntax' being enabled (like for indentation).
+        -- Using this option may slow down your editor, and you may see some duplicate highlights.
+        -- Instead of true it can also be a list of languages
+        additional_vim_regex_higlighting = false
+        },
+    -- Experimental indent for `=` operator
+    indent = {
+        enabled = true
+    }
+}
+EOF
+endfunction
+
+if has("nvim")
+    call ConfigureTreeSitter()
+endif
 
 
 
@@ -397,14 +508,16 @@ endfunction
 autocmd BufEnter,TabEnter,WinEnter,BufWinEnter * :call CreateStatusLine()
 
 
-
 " ------------------------- KEY BINDINGS --------------------------
+
 nmap di <Plug>DetectIndent<CR> | call CreateStatusLine()
 
 " CTRL-/ toggles comments
 map <C-_> <Plug>NERDCommenterToggle
 imap <C-_> <Plug>NERDCommenterToggle
 nnoremap <C-J> a<CR><Esc>k$
+" execute "set <M-Q>=\eQ"
+nnoremap <leader>q vipgq<CR>
 " inoremap <F3> <C-O>:w<CR>
 
 " ## added by OPAM user-setup for vim / base ## 93ee63e278bdfc07d1139a748ed3fff2 ## you can edit, but keep this line
