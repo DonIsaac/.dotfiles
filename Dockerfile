@@ -22,11 +22,3 @@ RUN git submodule update --init --recursive
 CMD cd /root/.dotfiles && bash install.sh && bash
 # CMD ["/bin/bash"]
 
-
-
-
-# Backup code, just in case
-
-# RUN apt-get update && \
-	# apt-get -y install git vim python3 && \
-	# alias python=python3

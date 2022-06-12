@@ -6,7 +6,8 @@
 		"~/.bash_logout": ".bash_logout",
 		"~/.tmux.conf": ".tmux.conf",
 		"~/.tmux.conf.local": ".tmux.conf.local",
-		"~/.vimrc": ".vimrc"
+		"~/.vimrc": ".vimrc",
+        "~/.config/nvim/init.vim": "nvim.init.vim"
 	},
 
 	"shell": {
