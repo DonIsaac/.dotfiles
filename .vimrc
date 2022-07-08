@@ -1,4 +1,3 @@
-
 set background=dark
 set incsearch
 set hidden
@@ -29,7 +28,10 @@ if has ("autocmd")
 	autocmd FileType make set noexpandtab softtabstop=0 tabstop=4
 endif
 
+" Include source folder and monorepos in path, making them discoverable with
+" :find
 set path+=src/**
+set path+=packages/**
 
 " Better command-line completion
 set wildmenu
@@ -38,6 +40,8 @@ set wildignore+=*.o,*.swp,*.DS_Store
 
 " Show partial commands in the last line of the screen
 set showcmd
+
+set nowrap
 
 " Highlight searches (use <C-L> to temporarily turn off highlighting; see the
 " mapping of <C-L> below)
@@ -66,8 +70,13 @@ set nostartofline
 " Display the cursor position on the last line of the screen or in the status
 " line of a window
 set ruler
+
 " Linewrap markdown files at 80 characters
 au BufRead,BufNewFile *.md setlocal textwidth=80
+
+" Disable line numbers and sign column (gap on left side of line numbers) in
+" the integrated terminal
+au TermOpen * setlocal nonumber norelativenumber signcolumn=no
 
 " Always display the status line, even if only one window is displayed
 set laststatus=2
@@ -176,7 +185,7 @@ nmap <leader>ss :echo SynStack()<CR>
 nmap <leader>sg :echo SynGroup()<CR>
 nmap <leader>sG :echo SynGroup(1)<CR>
 
-nmap <C-.> :echo "hello!"<CR>
+" nmap <C-.> :echo "hello!"<CR>
 
 " ----------------------------- PLUGGED SETTINGS -----------------------------
 
@@ -199,46 +208,72 @@ let g:NERDTreeIgnore=['node_modules', 'dist', '\.git', '\.yarn', '\.DS_Store', '
 " To install plugins, add them to this list and run :PlugInstall 
 call plug#begin('~/.vim/plugged')
 
-Plug 'scrooloose/nerdcommenter'
 " vim IDE plugin, based on VSCode
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-" Plug 'sheerun/vim-polyglot'
+Plug 'scrooloose/nerdcommenter'
+
 " Sidebar file explorer
 Plug 'preservim/nerdtree'
-Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'Xuyuanp/nerdtree-git-plugin' " Show git status next to files in nerdtree
+Plug 'ryanoasis/vim-devicons' " Adds filetype icons next to files/folders. Requires a Nerd Font compatible font
+Plug 'kyazdani42/nvim-web-devicons' " Adds filetype icons next to files/folders. Requires a Nerd Font compatible font
+
+" Status and tab line
+Plug 'akinsho/bufferline.nvim', { 'tag': 'v2.*' }
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+
+" Syntax plugins
+Plug 'sheerun/vim-polyglot'
 Plug 'vim-ruby/vim-ruby'
 Plug 'hashivim/vim-terraform'
 Plug 'wlangstroth/vim-racket'
 Plug 'chr4/nginx.vim'
 Plug 'neoclide/jsonc.vim'
+Plug 'leafgarland/typescript-vim'
+Plug 'harenome/vim-mipssyntax'
+Plug 'fladson/vim-kitty'
+
 Plug 'vim-scripts/DoxygenToolkit.vim'
+Plug 'junegunn/fzf' " fuzzyfinder, gives Ctrl+P-like functionality
 " TypeScript plugin
 " Plug 'Quramy/tsuquyomi'
-Plug 'leafgarland/typescript-vim'
 Plug 'DonIsaac/detectindent'
-Plug 'harenome/vim-mipssyntax'
 Plug 'abecodes/tabout.nvim'
 Plug 'jackguo380/vim-lsp-cxx-highlight'
 " Git plugin (https://github.com/tpope/vim-fugitive)
 Plug 'tpope/vim-fugitive'
+Plug 'tpope/vim-surround'
+" Show git changes next to line numbers
+Plug 'airblade/vim-gitgutter'
 
 " Rainbow brackets plugin
 " Plug 'junegunn/rainbow_parentheses.vim'
 Plug 'frazrepo/vim-rainbow'
+
 " Color schemes
 Plug 'dikiaap/minimalist' " colorscheme minimalist
 Plug 'drewtempelmeyer/palenight.vim' " colorscheme palenight
+Plug 'mhartington/oceanic-next'
+Plug 'marko-cerovac/material.nvim'
 
 " Only install these plugins if we're running neovim, not vim
 if has('nvim')
     Plug 'github/copilot.vim'
     Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
-    " Plug 'rockerBOO/boo-colorscheme-nvim' " colorscheme boo
+    Plug 'p00f/nvim-ts-rainbow'
+	Plug 'JoosepAlviste/nvim-ts-context-commentstring'
+    Plug 'rockerBOO/boo-colorscheme-nvim' " colorscheme boo
 endif
 
 " Detects indent style of currently opened file and adjusts accordingly
 " Plug 'ciaranm/detectindent'
 call plug#end()
+
+" ------------------------ VIM-FUGITIVE SETTINGS -----------------------
+" command
+cnoreabbrev GA Git add %
+cnoreabbrev GDi Git diff % 
 
 " ------------------------ RAINBOW PARENTHESES SETTINGS -----------------------
 
@@ -285,7 +320,8 @@ autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTr
 
 " Comment out the current line
 " noremap <expr> <C-/> NERDComment("n", "Toggle")
-" nmap <C-_> <Plug>NERDCommenterToggle<CR>gv
+inoremap <C-/> <esc><Plug>NERDCommenterToggle
+nnoremap <C-/> <Plug>NERDCommenterToggle
 let g:NERDSpaceDelims = 1
 
 
@@ -298,13 +334,52 @@ if has("termguicolors")
 endif
 
 if has('nvim')
-    colorscheme palenight
-    let g:palenight_terminal_italics = 1
+    " colorscheme palenight
+    " let g:palenight_terminal_italics = 1
+
+    " colorscheme OceanicNext
+
+    let g:material_style = "palenight"
+	colorscheme material
 else
     colorscheme minimalist
 endif
 
+" if colorscheme is material
+if g:colors_name == "material"
+	lua require('material.functions').change_style('palenight')
 
+	if has('nvim')
+lua << EOF
+require('material').setup({
+    contrast = {
+        sidebars = false,
+        line_numbers = false
+	},
+    italics = {
+        comments = true
+    },
+    disable = {
+		colored_cursor = true
+	}
+})
+EOF
+	endif
+endif
+
+" -------------------------------- FZF SETTINGS --------------------------------
+
+let g:fzf_action = {
+  \ 'ctrl-t': 'tab split',
+  \ 'ctrl-x': 'split',
+  \ 'ctrl-v': 'vsplit' }
+let g:fzf_history_dir = '~/.local/share/fzf-history'
+nnoremap <silent> <C-P> :call fzf#run(fzf#wrap({
+            \ 'sink': 'e',
+            \ 'source': 'fdfind --type f --hidden --follow --exclude .git --exclude **/node_modules --exclude **/dist',
+            \ 'options': '--margin 2% --padding 1%',
+            \ 'window': { 'width': 0.9, 'height': 0.7 }
+            \ }))<CR>
 
 " ----------------------------- COC.NVIM SETTINGS ------------------------------
 
@@ -343,14 +418,22 @@ nmap <silent> gi <Plug>(coc-implementation)
 nmap <silent> gr <Plug>(coc-references)
 
 " Use K to show documentation in preview window
+" function! s:show_documentation()
+"   if (index(['vim','help'], &filetype) >= 0)
+"     execute 'h '.expand('<cword>')
+"   elseif (coc#rpc#ready())
+"     call CocActionAsync('doHover')
+"   else
+"     execute '!' . &keywordprg . " " . expand('<cword>')
+"   endif
+" endfunction
+
 function! s:show_documentation()
-  if (index(['vim','help'], &filetype) >= 0)
-    execute 'h '.expand('<cword>')
-  elseif (coc#rpc#ready())
-    call CocActionAsync('doHover')
-  else
-    execute '!' . &keywordprg . " " . expand('<cword>')
-  endif
+	if CocAction('hasProvider', 'hover')
+		call CocActionAsync('doHover')
+	else
+		call feedkeys('K', 'in')
+	endif
 endfunction
 
 " K shows documentation in preview window
@@ -375,35 +458,50 @@ nmap <leader>f  <Plug>(coc-format-selected)
 nmap <leader>rn <Plug>(coc-rename)
 nmap <F2> <Plug>(coc-rename)
 
-" use \. to show fix suggestions
-nmap <leader>. :CocFix<CR>
-imap <leader>. <C-O>:CocFix<CR>
-
 " Run the Code Lens action on the current line.
 nmap <leader>cl <Plug>(coc-codelens-action)
 
 " Remap <C-f> and <C-b> for scroll float windows/popups.
 if has('nvim-0.4.0') || has('patch-8.2.0750')
-  nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
-  nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
-  inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
-  inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
-  vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
-  vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+    nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+    nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
+    inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
+    inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
+    vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
+    vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
 endif
 
+" use \. to show fix suggestions
+" nmap <leader>. :CocFix<CR>
+" imap <leader>. <C-O>:CocFix<CR>
+nmap <leader>. :call CocAction("codeAction")<CR>
+nmap <C-.> :call CocAction("codeAction")<CR>
+imap <leader>. <C-O>:call CocAction("codeAction")<CR>
 
 " Add `:Format` command to format the current buffer
 command! -nargs=0 Format :call CocAction('format')
+command! -nargs=0 Lint :call CocActionAsync('runCommand', 'eslint.executeAutofix')
 " todo: does not work
 " nnoremap <silent> \ef :call <SID>CocAction('format')<CR>
 
-inoremap <silent><expr> <TAB>
-      \ pumvisible() ? "\<C-n>" :
-      \ <SID>check_back_space() ? "\<TAB>" :
-      \ coc#refresh()
+" Use tab for trigger completion with characters ahead and navigate.
+" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
+" other plugin before putting this into your config.
+if empty(maparg("<Tab>", "i", 0, 1))
+	inoremap <silent><expr> <TAB>
+		  \ pumvisible() ? "\<C-n>" :
+		  \ <SID>check_back_space() ? "\<TAB>" :
+		  \ coc#refresh()
+endif
 inoremap <expr><S-TAB> pumvisible() ? "\<C-p>" : "\<C-h>"
+inoremap <expr> <cr> pumvisible() ? "\<C-y>" : "\<C-g>u\<CR>"
 
+" Use <c-space> to trigger completion.
+if has('nvim')
+    inoremap <silent><expr> <c-space> coc#refresh()
+else
+    inoremap <silent><expr> <c-@> coc#refresh()
+endif
 
 
 " ------------------------------ COPILOT SETTINGS ------------------------------
@@ -422,7 +520,7 @@ let g:copilot_filetypes = {
 function! ConfigureTreeSitter()
 lua << EOF
 require'nvim-treesitter.configs'.setup {
-    ensure_installed = { "c", "cpp", "python", "javascript", "typescript", "html", "css" },
+    ensure_installed = { "c", "cpp", "python", "javascript", "typescript", "jsdoc", "html", "css" },
     sync_install = false,
     highlight = {
         enable = true,
@@ -437,7 +535,14 @@ require'nvim-treesitter.configs'.setup {
     -- Experimental indent for `=` operator
     indent = {
         enabled = true
-    }
+    },
+    context_commentstring = {
+		enabled = true
+	},
+    rainbow = {
+		enable = true,
+		extended_mode = true -- Also highlight non-bracket delimeters like tags. boolean or table: lang -> boolean
+	}
 }
 EOF
 endfunction
@@ -448,7 +553,76 @@ endif
 
 
 
-" -------------------------- STATUS BAR --------------------------
+" --------------------------------- TABPAGE BAR --------------------------------
+
+lua << EOF
+require("bufferline").setup{
+    options = {
+		-- "buffers" to show all opened buffers in the tab bar, "tabs" to only show tabpages
+		mode = "tabs",
+        diagnostics = "coc",
+		-- Can be "slant", "thick", "thin", or a table with 2 custom separators
+		separator_style = "slant"
+        -- This triangle is \u25b6, but doesn't seem to work well
+		-- separator_style = { "▶", "▶" }
+	}
+}
+EOF
+
+
+
+" --------------------------------- STATUS BAR ---------------------------------
+
+" ---- Symbols
+if !exists('g:airline_symbols')
+	let g:airline_symbols = {}
+endif
+
+let g:airline_left_sep='' " \uE0B0
+let g:airline_right_sep='' " \uE0B2
+let g:airline_symbols.branch='' " \uE725
+
+
+
+" ---- Status bar customization
+
+" Don't show empty status bar sections
+let g:airline_skip_empty_sections = 1
+
+" Don't show encoding/line ending in status bar if it's the usual
+let g:airline#parts#ffenc#skip_expected_string='utf-8[unix]'
+
+" let g:airline_section_z+="%p%%%#__accent_bold#%{g:airline_symbols.linenr}%l%#__restore__#%#__accent_bold#/%L%{g:airline_symbols.maxlinenr}%#__restore__#%#__accent_bold#%{g:airline_symbols.colnr}%v%#__restore__#"
+" let g:airline_section_z="%l:%v %#__accent_bold#%{g:airline_symbols.maxlinenr}%#__restore__# %p%%"
+
+" Customize Z section (line/col number)
+let g:airline_section_z="%l:%v "
+let g:airline_section_z = g:airline_section_z . "%#__accent_bold#%{g:airline_symbols.maxlinenr}%#__restore__# "
+let g:airline_section_z = g:airline_section_z . "%p%%"
+
+" CoC Configuration
+let airline#extensions#coc#error_symbol=""
+let airline#extensions#coc#warning_symbol=""
+
+function! CopilotStatus()
+	let l:status = ""
+	if copilot#Enabled()
+		let l:status = " "
+	elseif ! empty(copilot#Agent().StartupError())
+		let l:status = " "
+	else
+		let l:status = " "
+	endif
+
+	return l:status
+endfunction
+
+call airline#parts#define_function('copilot', 'CopilotStatus')
+call airline#parts#define_minwidth('copilot', 20)
+let g:airline_section_y = airline#section#create_right(['ffenc', 'copilot'])
+
+
+" -----------------------------------------------------------------------------
 function! GitBranch()
   return system("git rev-parse --abbrev-ref HEAD 2>/dev/null | tr -d '\n'")
 endfunction
@@ -475,42 +649,53 @@ function! IndentLine()
 endfunction
 
 function! CreateStatusLine()
-  " Left
-  set statusline=
-  set statusline+=%#DiffAdd#%{(mode()=='n')?'\ \ NORMAL\ ':''}
-  set statusline+=%#DiffChange#%{(mode()=='i')?'\ \ INSERT\ ':''}
-  set statusline+=%#DiffDelete#%{(mode()=='r')?'\ \ RPLACE\ ':''}
-  set statusline+=%#Cursor#%{(mode()=='v')?'\ \ VISUAL\ ':''}
-  set statusline+=\ %n\                       " buffer number
-  set statusline+=%#Visual#                   " colour
-  set statusline+=%{&paste?'\ PASTE\ ':''}
-  set statusline+=%{&spell?'\ SPELL\ ':''}
-  set statusline+=%#CursorIM#                 " colour
-  set statusline+=%R                          " readonly flag
-  set statusline+=%M                          " modified [+] flag
-  set statusline+=%#Cursor#                   " colour
-  set statusline+=%#CursorLine#               " colour
-  set statusline+=\ %t\                       " short file name
+  " Check if buffer is NERDTree
+  " if execute("setl ft?") =~? "nerdtree"
+  "   " NERDTree status line
+  "   set statusline=
+  "   set statusline+=%#CursorLine#
+  "   set statusline+=%{expand('%:p:h:t')}\        " Root folder path
+  "   " set statusline+=${StatuslineGit()}
+  " else
+    " Left
+    set statusline=
+    set statusline+=%#DiffAdd#%{(mode()=='n')?'\ \ NORMAL\ ':''}
+    set statusline+=%#DiffChange#%{(mode()=='i')?'\ \ INSERT\ ':''}
+    set statusline+=%#DiffDelete#%{(mode()=='r')?'\ \ RPLACE\ ':''}
+    set statusline+=%#Cursor#%{(mode()=='v')?'\ \ VISUAL\ ':''}
+    set statusline+=\ %n\                       " buffer number
+    set statusline+=%#Visual#                   " colour
+    set statusline+=%{&paste?'\ PASTE\ ':''}
+    set statusline+=%{&spell?'\ SPELL\ ':''}
+    set statusline+=%#CursorIM#                 " colour
+    set statusline+=%R                          " readonly flag
+    set statusline+=%M                          " modified [+] flag
+    set statusline+=%#Cursor#                   " colour
+    set statusline+=%#CursorLine#               " colour
+    set statusline+=\ %t\                       " short file name
+    set statusline+=%{coc#status()}
+    " set statusline^=%{coc#status()}%{get(b:, 'coc_current_function', '')}
 
-  set statusline+=%=                          " right align
+    set statusline+=%=                          " right align
 
-  " Right
-  set statusline+=%#CursorLine#               " colour
-  set statusline+=\ %Y\                       " file type
-  set statusline+=\ %{StatuslineGit()}\       " git branch, if available
-  set statusline+=\ %{IndentLine()}\          " indent stats
-  set statusline+=%#CursorIM#                 " colour
-  set statusline+=\ %3l:%-2c\                 " line + column
-  set statusline+=%#Cursor#                   " colour
-  set statusline+=\ %3p%%\                    " percentage
+    " Right
+    set statusline+=%#CursorLine#               " colour
+    set statusline+=\ %Y\                       " file type
+    set statusline+=\ %{StatuslineGit()}\       " git branch, if available
+    set statusline+=\ %{IndentLine()}\          " indent stats
+    set statusline+=%#CursorIM#                 " colour
+    set statusline+=\ %3l:%-2c\                 " line + column
+    set statusline+=%#Cursor#                   " colour
+    set statusline+=\ %3p%%\                    " percentage
+  " endif
 endfunction
 
-autocmd BufEnter,TabEnter,WinEnter,BufWinEnter * :call CreateStatusLine()
+" autocmd BufEnter,TabEnter,WinEnter,BufWinEnter * :call CreateStatusLine()
 
 
 " ------------------------- KEY BINDINGS --------------------------
 
-nmap di <Plug>DetectIndent<CR> | call CreateStatusLine()
+" nmap di <Plug>DetectIndent<CR> | call CreateStatusLine()
 
 " CTRL-/ toggles comments
 map <C-_> <Plug>NERDCommenterToggle
