@@ -1,9 +1,9 @@
 # Mostly-static setup
 FROM ubuntu:latest
 RUN apt-get update && \
-	apt-get install -y --no-install-recommends apt-utils && \
+	apt-get install -q -y --no-install-recommends apt-utils dialog && \
 	apt-get update && \
-    apt-get install -y git vim jq curl
+    apt-get install -y -q sudo git jq curl
 
 # Build args
 ARG REPO=https://github.com/DonIsaac/.dotfiles.git
@@ -19,6 +19,6 @@ RUN git submodule update --init --recursive
 # RUN ./install.sh
 
 # Start commands
-CMD cd /root/.dotfiles && bash install.sh && bash
+CMD cd /root/.dotfiles && bash install.sh --install all && bash
 # CMD ["/bin/bash"]
 

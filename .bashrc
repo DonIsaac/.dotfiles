@@ -45,7 +45,7 @@ fi
 
 # set a fancy prompt (non-color, unless we know we "want" color)
 case "$TERM" in
-    xterm-color|*-256color) color_prompt=yes;;
+    xterm-color|*-256color|xterm-kitty) color_prompt=yes;;
 esac
 
 # uncomment for a colored prompt, if the terminal has the capability; turned
@@ -145,15 +145,21 @@ fi
 
 # Make directories an easier color to see
 export LS_COLORS=$LS_COLORS:'di=0;33:'
-# Use 'bat' to colorize manpages if it's installed
+# Use bat for manpages, which gives manpages nice syntax highlighting
 # https://github.com/sharkdp/bat
-if has_command bat ; then
-    export MANPAGER="sh -c 'col -bx | bat -l man -p'"
-fi
+[[ $(which batcat) ]] && export MANPAGER="sh -c 'col -bx | batcat -l man -p'"
 
 # Add VSCode's 'code' command to the path (WSL only)
 if ! has_command code && [[ $((os_type & OS_FLAG_WSL)) -ne 0 ]] ; then
     [ -s "/mnt/c/Program Files/Microsoft VS Code/bin" ] && export PATH="$PATH:/mnt/c/Program Files/Microsoft VS Code/bin" 
+fi
+
+# FZF settings (https://github.com/junegunn/fzf)
+export FZF_DEFAULT_OPTS="--preview 'batcat --color=always --style=numbers --line-range=:500 {}'"
+if has_command fd ; then
+    export FZF_DEFAULT_COMMAND="fd --type f --hidden --follow --exclude .git --exclude **/node_modules --exclude **/dist"
+elif has_command fdfind ; then
+    export FZF_DEFAULT_COMMAND="fdfind --type f --hidden --follow --exclude .git --exclude **/node_modules --exclude **/dist"
 fi
 
 # Try to use NeoVIM, VIM, or VSCode (in that order) as default editor
@@ -182,8 +188,10 @@ has_command yarn &&             export PATH="$PATH:$(yarn global bin)"
 has_command pdflatex &&         export PATH="$PATH:/usr/local/texlive/2019/bin/x86_64-linux"
 [[ -s "$HOME/.deno/bin" ]] &&   export PATH="$PATH:~/.deno/bin"
 [[ -s "/usr/local/go/bin" ]] && export PATH="$PATH:/usr/local/go/bin"
+[[ -s "$HOME/.local/sonar-scanner/bin" ]] && export PATH="$PATH:/$HOME/.local/sonar-scanner/bin"
 [[ -s "$HOME/.bin" ]] &&        export PATH="$PATH:$HOME/.bin"
 [[ -s "$HOME/bin" ]] &&         export PATH="$PATH:$HOME/bin"
+[[ -s "$HOME/.local/bin" ]] &&        export PATH="$PATH:$HOME/.local/bin"
 # Add RVM to PATH for scripting. Make sure this is the last PATH variable change.
 has_command rvm &&              export PATH="$PATH:$HOME/.rvm/bin"
 
@@ -219,3 +227,19 @@ fi
 # uninstall by removing these lines
 [ -f ~/.config/tabtab/__tabtab.bash ] && . ~/.config/tabtab/__tabtab.bash || true
 [ -f "/home/donisaac/.ghcup/env" ] && source "/home/donisaac/.ghcup/env" # ghcup-env
+
+# >>> conda initialize >>>
+# !! Contents within this block are managed by 'conda init' !!
+__conda_setup="$('/home/donisaac/.local/anaconda3/bin/conda' 'shell.bash' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+    eval "$__conda_setup"
+else
+    if [ -f "/home/donisaac/.local/anaconda3/etc/profile.d/conda.sh" ]; then
+        . "/home/donisaac/.local/anaconda3/etc/profile.d/conda.sh"
+    else
+        export PATH="/home/donisaac/.local/anaconda3/bin:$PATH"
+    fi
+fi
+unset __conda_setup
+# <<< conda initialize <<<
+

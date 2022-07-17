@@ -13,6 +13,9 @@ RUN_ARGS := -it --name $(CONTAINER_NAME) -v $(shell pwd):/root/.dotfiles
 run: build.target docker-stop
 	docker run $(RUN_ARGS) $(IMAGE_NAME)
 
+bash: build.target docker-stop
+	docker run $(RUN_ARGS) $(IMAGE_NAME) /bin/bash -l
+
 check: check.target
 check.target: install.sh conf.json
 	@echo ">>> Checking install.sh..."

@@ -1,14 +1,17 @@
 # enable color support of ls and also add handy aliases
 if [ -x /usr/bin/dircolors ]; then
     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls='ls --color=always -F'
+    alias ls='ls --color=always --hyperlink=auto -F'
     #alias dir='dir --color=auto'
     #alias vdir='vdir --color=auto'
 
     alias grep='grep --color=auto'
     alias fgrep='fgrep --color=auto'
     alias egrep='egrep --color=auto'
+else
+    alias ls --hyperlink=auto -F
 fi
+
 
 # colored GCC warnings and errors
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
@@ -23,6 +26,9 @@ alias l='ls -CF'
 alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo error)" "$(history|tail -n1|sed -e '\''s/^\s*[0-9]\+\s*//;s/[;&|]\s*alert$//'\'')"'
 
 
+ has_command bat || alias bat="batcat"
+ has_command fdfind || alias fd="fdfind"
+
 alias g="git"
 alias y="yarn"
 alias c="cd"
@@ -30,6 +36,9 @@ alias back="cd -"
 # I keep mistyping this one
 alias gits="git status"
 alias dc="docker-compose"
+alias g="git"
+alias y="yarn"
+alias so="source"
 # I keep misstyping svn ugh
 alias sv="svn"
 alias tf="terraform"
@@ -66,6 +75,14 @@ if [ $((OS_TYPE & OS_FLAG_MACOS)) -ne 0 ]; then
     alias chrome="/Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome"
 fi
 
+# Linux program aliases
+if [ $((OS_TYPE & OS_FLAG_LINUX)) -ne 0 ]; then
+    alias clip="xclip -selection clipboard"
+    alias copy="xclip -selection clipboard"
+    alias paste="xclip -selection clipboard -o"
+    alias open="xdg-open"
+fi
+
 # Enter a directory and list its contents without flooding the terminal
 cdl () {
     cd "$1" && l | head
@@ -100,7 +117,7 @@ json() {
 
 # Show git diff using bat
 batdiff() {
-    git diff --name-only --diff-filter=d | xargs bat --diff
+    git diff --name-only --diff-filter=d | xargs batcat --diff
 }
 
 # Push a new branch to the remote repository
