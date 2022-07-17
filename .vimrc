@@ -198,11 +198,11 @@ endif
 
 " 1 for debug messages, 2 for verbose debug messages
 let g:detectindent_verbosity = 0
-let g:NERDTreeStatusLine = '%#NonText#'
+let g:NERDTreeStatusline = '%#NonText#'
 let g:NERDTreeHighlightCursorline = 1
 let g:NERDTreeShowHidden=1
 " These files won't appear in the file explorer
-let g:NERDTreeIgnore=['node_modules', 'dist', '\.git', '\.yarn', '\.DS_Store', '\.tsbuildinfo$', '\~$']
+let g:NERDTreeIgnore=['node_modules', 'dist', '\.git', '\.yarn', '\.DS_Store', '\.tsbuildinfo$', '\~$', '\.cache']
 
 " This part initializes plugins installed using vim-plugged
 " To install plugins, add them to this list and run :PlugInstall 
@@ -210,12 +210,20 @@ call plug#begin('~/.vim/plugged')
 
 " vim IDE plugin, based on VSCode
 Plug 'neoclide/coc.nvim', {'branch': 'release'}
-Plug 'scrooloose/nerdcommenter'
+" Debugger plugin, based on VSCode + debug protocol
+Plug 'puremourning/vimspector'
+
+" Useful utilities, generally cross-language
+Plug 'scrooloose/nerdcommenter' " Commenting lines or blocks of code
+Plug 'tpope/vim-surround'       " Add, edit, and remove surrounding quotes/parens/etc
+Plug 'DonIsaac/detectindent'    " Detect and adjust shiftwidth, expandtab, etc based on current buffer
+Plug 'abecodes/tabout.nvim'     " Press tab to move out of quotes/parens/etc
+Plug 'junegunn/fzf'             " fuzzyfinder, gives Ctrl+P-like functionality. Requires fzf installed.
 
 " Sidebar file explorer
 Plug 'preservim/nerdtree'
-Plug 'Xuyuanp/nerdtree-git-plugin' " Show git status next to files in nerdtree
-Plug 'ryanoasis/vim-devicons' " Adds filetype icons next to files/folders. Requires a Nerd Font compatible font
+Plug 'Xuyuanp/nerdtree-git-plugin'  " Show git status next to files in nerdtree
+Plug 'ryanoasis/vim-devicons'       " Adds filetype icons next to files/folders. Requires a Nerd Font compatible font
 Plug 'kyazdani42/nvim-web-devicons' " Adds filetype icons next to files/folders. Requires a Nerd Font compatible font
 
 " Status and tab line
@@ -235,15 +243,11 @@ Plug 'harenome/vim-mipssyntax'
 Plug 'fladson/vim-kitty'
 
 Plug 'vim-scripts/DoxygenToolkit.vim'
-Plug 'junegunn/fzf' " fuzzyfinder, gives Ctrl+P-like functionality
 " TypeScript plugin
 " Plug 'Quramy/tsuquyomi'
-Plug 'DonIsaac/detectindent'
-Plug 'abecodes/tabout.nvim'
 Plug 'jackguo380/vim-lsp-cxx-highlight'
 " Git plugin (https://github.com/tpope/vim-fugitive)
 Plug 'tpope/vim-fugitive'
-Plug 'tpope/vim-surround'
 " Show git changes next to line numbers
 Plug 'airblade/vim-gitgutter'
 
@@ -269,6 +273,8 @@ endif
 " Detects indent style of currently opened file and adjusts accordingly
 " Plug 'ciaranm/detectindent'
 call plug#end()
+
+let g:vimspector_enable_mappings = 'HUMAN'
 
 " ------------------------ VIM-FUGITIVE SETTINGS -----------------------
 " command
@@ -302,8 +308,9 @@ let g:rainbow_active = 1
 
 " ----------------------------- NERDTREE SETTINGS -----------------------------
 
-" Open NERDTree whenever vim is started
-autocmd vimenter * NERDTree
+" Open NERDTree whenever vim is started and put the cursor back into the
+" opened file.
+autocmd vimenter * NERDTree | wincmd p
 let NERDTreeRespectWildIgnore=1
 
 " Open NERDTree when 'vim' command is run. You no longer have to type 'vim .'
@@ -314,6 +321,8 @@ let NERDTreeRespectWildIgnore=1
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() |
     \ quit | endif
 
+" Open the exiting NERDTree on each new tab
+autocmd BufWinEnter * if getcmdwintype() == '' | silent NERDTreeMirror | endif
 
 
 " --------------------------- NERDCOMMENTER SETTINGS ---------------------------
@@ -339,7 +348,6 @@ if has('nvim')
 
     " colorscheme OceanicNext
 
-    let g:material_style = "palenight"
 	colorscheme material
 else
     colorscheme minimalist
@@ -347,7 +355,6 @@ endif
 
 " if colorscheme is material
 if g:colors_name == "material"
-	lua require('material.functions').change_style('palenight')
 
 	if has('nvim')
 lua << EOF
@@ -360,11 +367,29 @@ require('material').setup({
         comments = true
     },
     disable = {
-		colored_cursor = true
+		-- colored_cursor = true
+	},
+    custom_colors = {
+        -- yellow = "#AB47BC"
+    },
+	custom_highlights = {
+		Cursor = {
+            -- bg = "#FFCC00",
+            bg = "#AB47BC",
+            fg = "#1B1E2B"
+		},
+		Cursor = {
+            -- bg = "#FFCC00",
+            bg = "#AB47BC",
+            fg = "#1B1E2B"
+		},
+        RedrawDebugClear = { bg = "#AB47BC" },
 	}
 })
 EOF
 	endif
+
+	lua require('material.functions').change_style('palenight')
 endif
 
 " -------------------------------- FZF SETTINGS --------------------------------
@@ -376,7 +401,7 @@ let g:fzf_action = {
 let g:fzf_history_dir = '~/.local/share/fzf-history'
 nnoremap <silent> <C-P> :call fzf#run(fzf#wrap({
             \ 'sink': 'e',
-            \ 'source': 'fdfind --type f --hidden --follow --exclude .git --exclude **/node_modules --exclude **/dist',
+            \ 'source': 'fdfind --type f --hidden --follow --exclude .git --exclude node_modules --exclude dist',
             \ 'options': '--margin 2% --padding 1%',
             \ 'window': { 'width': 0.9, 'height': 0.7 }
             \ }))<CR>
@@ -475,7 +500,10 @@ endif
 " nmap <leader>. :CocFix<CR>
 " imap <leader>. <C-O>:CocFix<CR>
 nmap <leader>. :call CocAction("codeAction")<CR>
-nmap <C-.> :call CocAction("codeAction")<CR>
+nmap <C-.> <Plug>(coc-codeaction-selected)
+xmap <C-.> <Plug>(coc-codeaction-selected)
+imap <C-.> <Plug>(coc-codeaction-cursor)
+" nmap <C-.> :call CocAction("codeAction")<CR>
 imap <leader>. <C-O>:call CocAction("codeAction")<CR>
 
 " Add `:Format` command to format the current buffer
@@ -572,7 +600,7 @@ EOF
 
 
 " --------------------------------- STATUS BAR ---------------------------------
-
+let g:airline_theme = 'bubblegum'
 " ---- Symbols
 if !exists('g:airline_symbols')
 	let g:airline_symbols = {}
