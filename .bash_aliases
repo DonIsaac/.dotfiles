@@ -1,23 +1,29 @@
 # enable color support of ls and also add handy aliases
-if [ -x /usr/bin/dircolors ]; then
-    test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
-    alias ls='ls --color=always --hyperlink=auto -F'
-    #alias dir='dir --color=auto'
-    #alias vdir='vdir --color=auto'
-
-    alias grep='grep --color=auto'
-    alias fgrep='fgrep --color=auto'
-    alias egrep='egrep --color=auto'
-else
-    alias ls --hyperlink=auto -F
-fi
+# if [ -x /usr/bin/dircolors ]; then
+#     test -r ~/.dircolors && eval "$(dircolors -b ~/.dircolors)" || eval "$(dircolors -b)"
+#     alias ls='ls --color=always --hyperlink=auto -F'
+#     #alias dir='dir --color=auto'
+#     #alias vdir='vdir --color=auto'
+# 
+#     alias grep='grep --color=auto'
+#     alias fgrep='fgrep --color=auto'
+#     alias egrep='egrep --color=auto'
+# else
+#     alias ls --hyperlink=auto -F
+# fi
 
 
 # colored GCC warnings and errors
 #export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 
 # some more ls aliases
-alias ll='ls -alFh --group-directories-first'
+if [ $((OS_TYPE & OS_FLAG_LINUX)) -ne 0 ]; then
+    alias ls='ls --color=always --hyperlink=auto -F'
+    alias ll='ls -alFh --group-directories-first'
+else
+    alias ls='ls -G -F'
+    alias ll='ls -alFh'
+fi
 alias la='ls -AhF'
 alias l='ls -CF'
 
@@ -31,8 +37,10 @@ alias alert='notify-send --urgency=low -i "$([ $? = 0 ] && echo terminal || echo
 
 alias g="git"
 alias y="yarn"
-alias c="cd"
+alias c="cargo"
+alias j="just"
 alias back="cd -"
+alias nv="nvim"
 # I keep mistyping this one
 alias gits="git status"
 alias dc="docker-compose"
@@ -45,10 +53,12 @@ alias tf="terraform"
 alias more="less"
 alias py="python3"
 alias so="source"
+alias sha="sha256sum"
 # Interpret control characters (tldr; colored output)
 alias rless="less -r"
 alias p="pushd"
 alias pd="popd"
+# list processes using IP ports (and what ports they're using)
 alias ips="lsof -i -n -P"
 
 
@@ -113,6 +123,11 @@ json() {
     fi
     filter=${2:-.} # use '.' if no JQ filter was provided
     curl -sL $1 | jq -C $filter | less -R
+}
+
+jless() {
+    filter=${1:-.} # use '.' if no JQ filter was provided
+    jq -C $filter | less -R
 }
 
 # Show git diff using bat
