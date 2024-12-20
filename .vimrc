@@ -107,8 +107,11 @@ set relativenumber
 " Quickly time out on keycodes, but never time out on mappings
 set notimeout ttimeout ttimeoutlen=200
 
-" make CTRL-L clear highlighted search terms as well as redraw the screen
-nnoremap <silent> <C-L> :nohlsearch<CR><C-L>
+" Improve CTRL+L. Does the following:
+" 1. Clear highlighted search terms
+" 2. Refresh NERDTree (new files will appear)
+" 3. Redraw the screen (normal CTRL+L functionality)
+nnoremap <silent> <C-L> :nohlsearch<CR>:NERDTreeRefreshRoot<CR><C-L> 
 
 " Keybind Q to rewrap a block of selected text 
 vnoremap Q gq
@@ -202,7 +205,7 @@ let g:NERDTreeStatusLine = '%#NonText#'
 let g:NERDTreeHighlightCursorline = 1
 let g:NERDTreeShowHidden=1
 " These files won't appear in the file explorer
-let g:NERDTreeIgnore=['node_modules', 'dist', '\.git', '\.yarn', '\.DS_Store', '\.tsbuildinfo$', '\~$']
+let g:NERDTreeIgnore=['node_modules', 'dist', '\.git$', '\.yarn', '\.DS_Store', '\.tsbuildinfo$', '\.zig-cache', '\~$']
 
 " This part initializes plugins installed using vim-plugged
 " To install plugins, add them to this list and run :PlugInstall 
@@ -219,7 +222,7 @@ Plug 'ryanoasis/vim-devicons' " Adds filetype icons next to files/folders. Requi
 Plug 'kyazdani42/nvim-web-devicons' " Adds filetype icons next to files/folders. Requires a Nerd Font compatible font
 
 " Status and tab line
-Plug 'akinsho/bufferline.nvim', { 'tag': 'v2.*' }
+Plug 'akinsho/bufferline.nvim', { 'tag': '*' }
 Plug 'vim-airline/vim-airline'
 Plug 'vim-airline/vim-airline-themes'
 
@@ -234,8 +237,12 @@ Plug 'leafgarland/typescript-vim'
 Plug 'harenome/vim-mipssyntax'
 Plug 'fladson/vim-kitty'
 
+" tooling
 Plug 'vim-scripts/DoxygenToolkit.vim'
 Plug 'junegunn/fzf' " fuzzyfinder, gives Ctrl+P-like functionality
+Plug 'duane9/nvim-rg' " run ripgrep with :Rg
+Plug 'al1-ce/just.nvim' " :make-like support for justfiles. Requires just to be installed. https://github.com/casey/just
+
 " TypeScript plugin
 " Plug 'Quramy/tsuquyomi'
 Plug 'DonIsaac/detectindent'
@@ -310,10 +317,16 @@ let NERDTreeRespectWildIgnore=1
 " autocmd StdinReadPre * let s:std_in=1
 " autocmd VimEnter * if argc() == 0 && !exists("s:std_in") | NERDTree | endif
 
+" Move cursor to the file pane when vim is opened
+autocmd VimEnter * NERDTree | wincmd p
+
 " Close vim when NERDTree is the last window
 autocmd BufEnter * if tabpagenr('$') == 1 && winnr('$') == 1 && exists('b:NERDTree') && b:NERDTree.isTabTree() |
     \ quit | endif
 
+" alias NERDTreeFind to NTF
+command NTF :NERDTreeFind
+command NT :NERDTree
 
 
 " --------------------------- NERDCOMMENTER SETTINGS ---------------------------
@@ -376,7 +389,7 @@ let g:fzf_action = {
 let g:fzf_history_dir = '~/.local/share/fzf-history'
 nnoremap <silent> <C-P> :call fzf#run(fzf#wrap({
             \ 'sink': 'e',
-            \ 'source': 'fdfind --type f --hidden --follow --exclude .git --exclude **/node_modules --exclude **/dist',
+            \ 'source': 'fd --type f --hidden --follow --exclude .git --exclude **/node_modules --exclude **/dist',
             \ 'options': '--margin 2% --padding 1%',
             \ 'window': { 'width': 0.9, 'height': 0.7 }
             \ }))<CR>
@@ -608,7 +621,9 @@ function! CopilotStatus()
 	let l:status = ""
 	if copilot#Enabled()
 		let l:status = " "
-	elseif ! empty(copilot#Agent().StartupError())
+	elseif exists('*copilot#Agent') && ! empty(copilot#Agent().StartupError())
+		let l:status = " "
+	elseif exists('*copilot#Client') && ! empty(copilot#Client().StartupError())
 		let l:status = " "
 	else
 		let l:status = " "
